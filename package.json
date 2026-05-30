@@ -1,0 +1,15 @@
+{
+  "name": "state-employment-ai-disclosure-tracker",
+  "version": "0.1.0",
+  "description": "HR Tech 50-state + local-jurisdiction lifecycle tracker for state employment-AI laws and ordinances.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "node src/verify.mjs",
+    "test": "npm run verify"
+  },
+  "dependencies": {
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.1"
+  }
+}

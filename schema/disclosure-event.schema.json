@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mizcausevic-dev/state-employment-ai-disclosure-tracker/blob/main/schema/disclosure-event.schema.json",
+  "title": "State Employment AI Disclosure Lifecycle Event",
+  "description": "A timestamped lifecycle event in a US state's evolving employment AI regulation — typically a state legislative statute, state civil rights agency guidance, state DOL pre-rule guidance, or a local-jurisdiction ordinance (e.g. NYC Local Law 144). Tracks the per-jurisdiction regulatory pipeline (proposed -> enacted-awaiting-effective -> effective -> amended -> superseded -> sunset -> vetoed -> withdrawn) so employers + AI vendors + bias auditors can publish Decision Cards that reference the right regulatory set on any given hiring / promotion / termination date.",
+  "type": "object",
+  "required": ["event_id", "jurisdiction", "timestamp", "lifecycle_state", "citation"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id":         {"type": "string", "minLength": 1},
+    "jurisdiction":     {"type": "string", "pattern": "^US-[A-Z]{2}(-[A-Z0-9-]+)?$", "description": "US-XX state code OR US-XX-CITY local-jurisdiction code (e.g. 'US-NY-NYC' for New York City)"},
+    "timestamp":        {"type": "string", "format": "date-time"},
+    "lifecycle_state": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "in-committee",
+        "passed-one-chamber",
+        "enacted-awaiting-effective",
+        "effective",
+        "amended",
+        "superseded",
+        "sunset",
+        "vetoed",
+        "withdrawn"
+      ]
+    },
+    "regulatory_vehicle": {
+      "type": "string",
+      "enum": [
+        "state-legislative-statute",
+        "local-ordinance",
+        "state-civil-rights-agency-guidance",
+        "state-dol-pre-rule-guidance",
+        "state-doi-bulletin",
+        "city-or-county-rule"
+      ]
+    },
+    "citation": {
+      "type": "object",
+      "required": ["short_label", "jurisdictional_uri"],
+      "additionalProperties": false,
+      "properties": {
+        "short_label":          {"type": "string"},
+        "long_title":           {"type": "string"},
+        "jurisdictional_uri":   {"type": "string", "format": "uri"},
+        "session_year":         {"type": "integer", "minimum": 1900, "maximum": 2100}
+      }
+    },
+    "effective_date":   {"type": "string", "format": "date"},
+    "sunset_date":      {"type": "string", "format": "date"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "covered_decisions": {
+          "type": "array",
+          "items": {"type": "string", "enum": [
+            "hiring-sourcing",
+            "hiring-screening",
+            "hiring-interview-scoring",
+            "hiring-offer",
+            "promotion",
+            "performance-evaluation",
+            "termination",
+            "compensation",
+            "scheduling",
+            "discipline"
+          ]}
+        },
+        "covered_actors": {
+          "type": "array",
+          "items": {"type": "string", "enum": [
+            "private-employer",
+            "public-employer",
+            "federal-contractor",
+            "employment-agency",
+            "staffing-agency",
+            "platform-employer",
+            "ai-vendor",
+            "background-check-company",
+            "bias-auditor"
+          ]}
+        },
+        "minimum_employer_size": {"type": "integer", "minimum": 0},
+        "covered_geographic_scope": {"type": "string", "description": "Free-text geographic-scope description (e.g. 'NYC residents only', 'positions performed primarily in IL')"}
+      }
+    },
+    "obligation_kinds": {
+      "type": "array",
+      "items": {"type": "string", "enum": [
+        "annual-bias-audit-required",
+        "bias-audit-results-publication-required",
+        "candidate-notice-required",
+        "alternative-selection-process-required",
+        "consent-for-video-interview-ai-required",
+        "ada-reasonable-accommodation-pathway-required",
+        "decision-card-publication-required",
+        "ai-system-inventory-required",
+        "third-party-vendor-due-diligence-required",
+        "right-to-explanation-required",
+        "right-to-human-review-required",
+        "right-to-opt-out-required",
+        "annual-impact-assessment-required",
+        "annual-bias-report-required",
+        "consumer-disclosure-required-as-employee",
+        "ban-on-protected-class-data-as-input",
+        "employer-prohibited-from-using-facial-recognition"
+      ]}
+    },
+    "regulator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primary_agency_code": {"type": "string", "description": "e.g. 'NYC-DCWP', 'IL-DOL', 'MD-DOLLR', 'CA-DFEH', 'CO-DOLE', 'EEOC' (federal counterpart)"},
+        "primary_agency_name": {"type": "string"},
+        "primary_agency_uri":  {"type": "string", "format": "uri"},
+        "concurrent_jurisdiction":{"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "supersedes_event_id":    {"type": "string"},
+    "notes":                  {"type": "string"}
+  },
+  "allOf": [
+    {"if": {"properties": {"lifecycle_state": {"const": "effective"}}},  "then": {"required": ["effective_date"]}},
+    {"if": {"properties": {"lifecycle_state": {"const": "sunset"}}},     "then": {"required": ["sunset_date"]}},
+    {"if": {"properties": {"lifecycle_state": {"enum": ["superseded", "amended"]}}}, "then": {"required": ["supersedes_event_id"]}}
+  ]
+}
